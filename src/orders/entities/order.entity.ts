@@ -1,6 +1,6 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
-enum OrderStatus {
+export enum OrderStatus {
   PENDING = 'PENDING',
   COMPLETED = 'COMPLETED',
   CANCELLED = 'CANCELLED',
@@ -21,7 +21,6 @@ export class Order {
   @Column({ type: 'enum', enum: OrderStatus, default: OrderStatus.PENDING })
   status: OrderStatus;
 
-  //default false
   @Column({ type: 'boolean', default: false })
   paid:boolean;
 
@@ -31,6 +30,6 @@ export class Order {
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 
-  @Column({ type: 'timestamp'})
+  @UpdateDateColumn({ type: 'timestamp'})
   updatedAt: Date;
 }
