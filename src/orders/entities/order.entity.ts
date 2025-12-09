@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 export enum OrderStatus {
   PENDING = 'PENDING',
@@ -32,4 +32,30 @@ export class Order {
 
   @UpdateDateColumn({ type: 'timestamp'})
   updatedAt: Date;
+
+  @OneToMany(() => OrderItems, item => item.order, { cascade: true, eager: true, })
+  items: OrderItems[];
+}
+
+
+@Entity()
+export class OrderItems{
+
+  @PrimaryGeneratedColumn('uuid')
+  id:string;
+
+  @Column({type:'int'})
+  productId:number;
+
+  @Column({type:'int'})
+  quantity:number
+
+  @Column({type:'float'})
+  price:number
+
+  @ManyToOne(() => Order, order => order.items, { onDelete: 'CASCADE' })
+  order: Order;
+
+  @Column()
+  orderId: string;
 }
