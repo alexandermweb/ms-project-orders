@@ -5,7 +5,7 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { ChangeOrderStatusDto, OrderPaginationDto } from './dto';
-import { PRODUCT_SERVICE } from 'src/config';
+import { NATS_SERVICE, PRODUCT_SERVICE } from 'src/config';
 import { firstValueFrom } from 'rxjs';
 
 @Injectable()
@@ -15,8 +15,8 @@ export class OrdersService {
     @InjectRepository(Order) 
     private readonly orderRepository: Repository<Order>,
 
-    @Inject(PRODUCT_SERVICE) 
-    private readonly productsClient:ClientProxy
+    @Inject(NATS_SERVICE) 
+    private readonly client:ClientProxy
   ){}
 
 
@@ -26,7 +26,7 @@ export class OrdersService {
 
       const productIds = createOrderDto.items.map( item => item.productId);
       const products = await firstValueFrom(
-        this.productsClient.send({ cmd: 'validate-products' }, productIds)
+        this.client.send({ cmd: 'validate-products' }, productIds)
       );
       
       //calcular los valores
@@ -108,7 +108,7 @@ export class OrdersService {
     const productIds = order.items.map( orderItem => orderItem.productId);
 
     const products = await firstValueFrom(
-      this.productsClient.send({ cmd: 'validate-products' }, productIds)
+      this.client.send({ cmd: 'validate-products' }, productIds)
     );
 
     return {

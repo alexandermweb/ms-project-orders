@@ -5,21 +5,13 @@ import { Order, OrderItems } from './entities/order.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { envs, PRODUCT_SERVICE } from 'src/config';
+import { NatsModule } from 'src/transports/nats.module';
 
 @Module({
   imports:[
     TypeOrmModule.forFeature([Order, OrderItems]),
 
-    ClientsModule.register([
-      {
-        name: PRODUCT_SERVICE,
-        transport: Transport.TCP,
-        options: {
-          host: envs.productsMsHost,
-          port: envs.productsMsPort
-        }
-      }
-    ])
+    NatsModule
   ],
   controllers: [OrdersController],
   providers: [OrdersService],
