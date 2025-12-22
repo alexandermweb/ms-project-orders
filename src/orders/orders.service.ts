@@ -1,12 +1,14 @@
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { Order } from './entities/order.entity';
+import { Order, OrderStatus } from './entities/order.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
-import { ChangeOrderStatusDto, OrderPaginationDto } from './dto';
+import { ChangeOrderStatusDto, OrderPaginationDto, PaidOrderDto } from './dto';
 import { NATS_SERVICE, PRODUCT_SERVICE } from 'src/config';
 import { firstValueFrom } from 'rxjs';
+import { OrderWithProducts } from './interfaces/order-with-products.interface';
+import { OrderReceipt } from './entities/order-receipt.entity';
 
 @Injectable()
 export class OrdersService {
@@ -127,5 +129,44 @@ export class OrdersService {
     order.status = status;
     return this.orderRepository.save(order);
   }
+
+
+  async createPaymentSession( order:OrderWithProducts){
+
+    const paymentSession = await firstValueFrom(
+      this.client.send('create.payment.session', {
+        orderId: order.id,
+        currency:'usd',
+        items: order.items.map( item => ({
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+        }))
+      })
+    );
+
+    return paymentSession;
+  }
+
+
+  async paidOrder(paidOrderDto:PaidOrderDto){
+
+    const order = await this.findOne( paidOrderDto.orderId );
+
+    order.status = OrderStatus.PAID;
+    order.paid = true;
+    order.paidAt = new Date();
+    order.stripeChargeId = paidOrderDto.stripePaymentId;
+    
+    if (!order.receipt) {
+    order.receipt = {
+      receiptUrl: paidOrderDto.receiptUrl, // o lo que uses
+    } as OrderReceipt;
+  }
+    
+    return this.orderRepository.save(order);
+  }
+
+
 
 }

@@ -1,7 +1,9 @@
-import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { OrderReceipt } from "./order-receipt.entity";
 
 export enum OrderStatus {
-  PENDING = 'PENDING',
+  PENDING   = 'PENDING',
+  PAID      = 'PAID',
   COMPLETED = 'COMPLETED',
   CANCELLED = 'CANCELLED',
 }
@@ -27,6 +29,9 @@ export class Order {
   @Column({ type: 'timestamp', nullable: true })
   paidAt?: Date;
 
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  stripeChargeId?:string;
+
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 
@@ -35,6 +40,14 @@ export class Order {
 
   @OneToMany(() => OrderItems, item => item.order, { cascade: true, eager: true, })
   items: OrderItems[];
+
+
+  @OneToOne(
+    () => OrderReceipt,
+    receipt => receipt.order,
+    { cascade: true }
+  )
+  receipt?: OrderReceipt;
 }
 
 
@@ -56,6 +69,7 @@ export class OrderItems{
   @ManyToOne(() => Order, order => order.items, { onDelete: 'CASCADE' })
   order: Order;
 
-  @Column()
-  orderId: string;
 }
+
+
+
